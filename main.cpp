@@ -5,23 +5,33 @@ static const float SCALE = 30.f;
 static const float BOX_SIZE = 64.f;
 static const float GRAVITY = 9.8f;
 
-static const float SCREEN_WIDTH = 1920.f;
-static const float SCREEN_HEIGHT = 1080.f;
+static const int SCREEN_WIDTH = 1920.f;
+static const int SCREEN_HEIGHT = 1080.f;
 
 void createGround(b2World &world, float x, float y);
 
-void createBox(b2World &world, int x, int y);
+void createBox(b2World &world, float x, float y);
 
 int main() {
+    float verticalGravity = GRAVITY;
+
+    sf::Font font;
+    font.loadFromFile("fonts/JetBrainsMonoNL-Regular.ttf");
+
+    sf::Text text;
+    text.setFont(font);
+    text.setPosition(8,8);
+    text.setCharacterSize(36);
+
     sf::Texture boxTexture;
-    boxTexture.loadFromFile("box.png");
+    boxTexture.loadFromFile("images/box.png");
 
     sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Box2D & SFML");
 
-    b2Vec2 gravity(0.f, GRAVITY);
+    b2Vec2 gravity(0.f, verticalGravity);
     b2World world(gravity);
 
-    createGround(world, SCREEN_WIDTH / 2, SCREEN_HEIGHT);
+    createGround(world, SCREEN_WIDTH / 2.f, SCREEN_HEIGHT);
 
     sf::Clock clock;
 
@@ -35,25 +45,38 @@ int main() {
                 const sf::Vector2i &mousePosition = sf::Mouse::getPosition(window);
                 createBox(world, mousePosition.x, mousePosition.y);
             }
+
         }
 
         sf::Time deltaTime = clock.restart();
+
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down)) {
+            verticalGravity += 10.f * deltaTime.asSeconds();
+        }
+
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up)) {
+            verticalGravity -= 10.f * deltaTime.asSeconds();
+        }
+        
+        text.setString(std::to_string(verticalGravity));
+        world.SetGravity(b2Vec2(0.f, verticalGravity));
 
         world.Step(deltaTime.asSeconds(), 8, 3);
 
         window.clear(sf::Color::Black);
 
-        for (b2Body *bodyIterator = world.GetBodyList(); bodyIterator != 0; bodyIterator = bodyIterator->GetNext()) {
-            if (bodyIterator->GetType() == b2_dynamicBody) {
+        for (b2Body *body = world.GetBodyList(); body != nullptr; body = body->GetNext()) {
+            if (body->GetType() == b2_dynamicBody) {
                 sf::Sprite boxSprite;
                 boxSprite.setTexture(boxTexture);
                 boxSprite.setOrigin(32.f, 32.f);
-                boxSprite.setPosition(bodyIterator->GetPosition().x * SCALE, bodyIterator->GetPosition().y * SCALE);
-                boxSprite.setRotation(bodyIterator->GetAngle() * 180 / b2_pi);
+                boxSprite.setPosition(body->GetPosition().x * SCALE, body->GetPosition().y * SCALE);
+                boxSprite.setRotation(body->GetAngle() * 180 / b2_pi);
                 window.draw(boxSprite);
             }
         }
 
+        window.draw(text);
         window.display();
     }
 
@@ -67,7 +90,7 @@ void createGround(b2World &world, float x, float y) {
     b2Body *body = world.CreateBody(&bodyDef);
 
     b2PolygonShape shape;
-    shape.SetAsBox((SCREEN_WIDTH / 2) / SCALE, (2.f / 2) / SCALE);
+    shape.SetAsBox((SCREEN_WIDTH / 2.f) / SCALE, (2.f / 2) / SCALE);
 
     b2FixtureDef fixtureDef;
     fixtureDef.density = 0.f;
@@ -76,7 +99,7 @@ void createGround(b2World &world, float x, float y) {
     body->CreateFixture(&fixtureDef);
 }
 
-void createBox(b2World &world, int x, int y) {
+void createBox(b2World &world, float x, float y) {
     b2BodyDef bodyDef;
     bodyDef.position = b2Vec2(x / SCALE, y / SCALE);
     bodyDef.type = b2_dynamicBody;
