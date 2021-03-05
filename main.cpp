@@ -1,6 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <Box2D/Box2D.h>
 #include <sstream>
+#include <random>
 
 static const float SCALE = 30.f;
 static const float BOX_SIZE = 64.f;
@@ -11,21 +12,25 @@ static const int SCREEN_HEIGHT = 1080.f;
 
 void createGround(b2World &world, float x, float y);
 
-void createBox(b2World &world, float x, float y);
+void createBox(b2World &world, float x, float y, float radians);
 
 int main() {
-    float timescale = 1.0f;
+    float timescale;
     float verticalGravity = GRAVITY;
 
     std::stringstream output;
+
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_real_distribution<double> dist(0.0, 2.0);
 
     sf::Font font;
     font.loadFromFile("fonts/JetBrainsMonoNL-Regular.ttf");
 
     sf::Text text;
     text.setFont(font);
-    text.setPosition(8,8);
-    text.setCharacterSize(24);
+    text.setPosition(8, 8);
+    text.setCharacterSize(18);
 
     sf::Texture boxTexture;
     boxTexture.loadFromFile("images/box.png");
@@ -48,9 +53,8 @@ int main() {
 
             if (event.type == sf::Event::MouseButtonPressed) {
                 const sf::Vector2i &mousePosition = sf::Mouse::getPosition(window);
-                createBox(world, mousePosition.x, mousePosition.y);
+                createBox(world, mousePosition.x, mousePosition.y, dist(mt));
             }
-
         }
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
@@ -76,8 +80,10 @@ int main() {
         }
 
         output.str("");
-        output << "Up/Down keys to change gravity. Return to reset it." << "\n";
-        output << "Left/Right keys to change timescale." << "\n";
+        output << "Click the mouse to create a box." << "\n";
+        output << "Press Up/Down keys to change Gravity. Return to reset it." << "\n";
+        output << "Press Left/Right keys to change Timescale." << "\n";
+        output << "Pres Esc to Quit." << "\n";
         output << "Gravity: " << verticalGravity << "\n";
         output << "Timescale: " << timescale << "\n";
 
@@ -122,9 +128,10 @@ void createGround(b2World &world, float x, float y) {
     body->CreateFixture(&fixtureDef);
 }
 
-void createBox(b2World &world, float x, float y) {
+void createBox(b2World &world, float x, float y, float radians) {
     b2BodyDef bodyDef;
     bodyDef.position = b2Vec2(x / SCALE, y / SCALE);
+    bodyDef.angle = radians * b2_pi;
     bodyDef.type = b2_dynamicBody;
     b2Body *body = world.CreateBody(&bodyDef);
 
