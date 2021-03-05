@@ -1,5 +1,6 @@
 #include <SFML/Graphics.hpp>
 #include <Box2D/Box2D.h>
+#include <sstream>
 
 static const float SCALE = 30.f;
 static const float BOX_SIZE = 64.f;
@@ -13,7 +14,10 @@ void createGround(b2World &world, float x, float y);
 void createBox(b2World &world, float x, float y);
 
 int main() {
+    float timescale = 1.0f;
     float verticalGravity = GRAVITY;
+
+    std::stringstream output;
 
     sf::Font font;
     font.loadFromFile("fonts/JetBrainsMonoNL-Regular.ttf");
@@ -21,12 +25,13 @@ int main() {
     sf::Text text;
     text.setFont(font);
     text.setPosition(8,8);
-    text.setCharacterSize(36);
+    text.setCharacterSize(24);
 
     sf::Texture boxTexture;
     boxTexture.loadFromFile("images/box.png");
 
     sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Box2D & SFML");
+    window.setFramerateLimit(60);
 
     b2Vec2 gravity(0.f, verticalGravity);
     b2World world(gravity);
@@ -48,19 +53,37 @@ int main() {
 
         }
 
-        sf::Time deltaTime = clock.restart();
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
+            window.close();
+        }
+
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
+            timescale = 0.25f;
+        } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
+            timescale = 4.0f;
+        } else {
+            timescale = 1.0f;
+        }
+
+        sf::Time deltaTime = clock.restart() * timescale;
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down)) {
             verticalGravity += 10.f * deltaTime.asSeconds();
-        }
-
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up)) {
+        } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up)) {
             verticalGravity -= 10.f * deltaTime.asSeconds();
+        } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::End)) {
+            verticalGravity = GRAVITY;
         }
-        
-        text.setString(std::to_string(verticalGravity));
-        world.SetGravity(b2Vec2(0.f, verticalGravity));
 
+        output.str("");
+        output << "Up/Down keys to change gravity. End to reset it." << "\n";
+        output << "Left/Right keys to change timescale." << "\n";
+        output << "Gravity: " << verticalGravity << "\n";
+        output << "Timescale: " << timescale << "\n";
+
+        text.setString(output.str());
+
+        world.SetGravity(b2Vec2(0.f, verticalGravity));
         world.Step(deltaTime.asSeconds(), 8, 3);
 
         window.clear(sf::Color::Black);
