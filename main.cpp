@@ -71,12 +71,12 @@ int main() {
             verticalGravity += 10.f * deltaTime.asSeconds();
         } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up)) {
             verticalGravity -= 10.f * deltaTime.asSeconds();
-        } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::End)) {
+        } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Return)) {
             verticalGravity = GRAVITY;
         }
 
         output.str("");
-        output << "Up/Down keys to change gravity. End to reset it." << "\n";
+        output << "Up/Down keys to change gravity. Return to reset it." << "\n";
         output << "Left/Right keys to change timescale." << "\n";
         output << "Gravity: " << verticalGravity << "\n";
         output << "Timescale: " << timescale << "\n";
