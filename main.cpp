@@ -3,7 +3,7 @@
 #include <sstream>
 #include <random>
 
-static const float SCALE = 30.f;
+static const float BOX2D_SCALE = 30.f;
 static const float BOX_SIZE = 64.f;
 static const float GRAVITY = 9.8f;
 
@@ -18,19 +18,17 @@ int main() {
     float timescale;
     float verticalGravity = GRAVITY;
 
-    std::stringstream output;
+    std::stringstream info;
 
-    std::random_device rd;
-    std::mt19937 mt(rd());
-    std::uniform_real_distribution<double> dist(0.0, 2.0);
+    std::random_device randomDevice;
+    std::mt19937 twisterEngine(randomDevice());
+    std::uniform_real_distribution<double> distribution(0.0, 2.0);
 
-    sf::Font font;
-    font.loadFromFile("fonts/JetBrainsMonoNL-Regular.ttf");
+    sf::Font jetBrainsMono;
+    jetBrainsMono.loadFromFile("fonts/JetBrainsMonoNL-Regular.ttf");
 
-    sf::Text text;
-    text.setFont(font);
-    text.setPosition(8, 8);
-    text.setCharacterSize(18);
+    sf::Text infoText("", jetBrainsMono, 18);
+    infoText.setPosition(8, 8);
 
     sf::Texture boxTexture;
     boxTexture.loadFromFile("images/box.png");
@@ -53,7 +51,7 @@ int main() {
 
             if (event.type == sf::Event::MouseButtonPressed) {
                 const sf::Vector2i &mousePosition = sf::Mouse::getPosition(window);
-                createBox(world, mousePosition.x, mousePosition.y, dist(mt));
+                createBox(world, mousePosition.x, mousePosition.y, distribution(twisterEngine));
             }
         }
 
@@ -79,15 +77,15 @@ int main() {
             verticalGravity = GRAVITY;
         }
 
-        output.str("");
-        output << "Click the mouse to create a box." << "\n";
-        output << "Press Up/Down keys to change Gravity. Return to reset it." << "\n";
-        output << "Press Left/Right keys to change Timescale." << "\n";
-        output << "Pres Esc to Quit." << "\n";
-        output << "Gravity: " << verticalGravity << "\n";
-        output << "Timescale: " << timescale << "\n";
+        info.str("");
+        info << "Click the mouse to create a box." << "\n";
+        info << "Press Up/Down keys to change Gravity. Return to reset it." << "\n";
+        info << "Press Left/Right keys to change Timescale." << "\n";
+        info << "Pres Esc to Quit." << "\n";
+        info << "Gravity: " << verticalGravity << "\n";
+        info << "Timescale: " << timescale << "\n";
 
-        text.setString(output.str());
+        infoText.setString(info.str());
 
         world.SetGravity(b2Vec2(0.f, verticalGravity));
         world.Step(deltaTime.asSeconds(), 8, 3);
@@ -99,13 +97,13 @@ int main() {
                 sf::Sprite boxSprite;
                 boxSprite.setTexture(boxTexture);
                 boxSprite.setOrigin(32.f, 32.f);
-                boxSprite.setPosition(body->GetPosition().x * SCALE, body->GetPosition().y * SCALE);
+                boxSprite.setPosition(body->GetPosition().x * BOX2D_SCALE, body->GetPosition().y * BOX2D_SCALE);
                 boxSprite.setRotation(body->GetAngle() * 180 / b2_pi);
                 window.draw(boxSprite);
             }
         }
 
-        window.draw(text);
+        window.draw(infoText);
         window.display();
     }
 
@@ -114,12 +112,12 @@ int main() {
 
 void createGround(b2World &world, float x, float y) {
     b2BodyDef bodyDef;
-    bodyDef.position = b2Vec2(x / SCALE, y / SCALE);
+    bodyDef.position = b2Vec2(x / BOX2D_SCALE, y / BOX2D_SCALE);
     bodyDef.type = b2_staticBody;
     b2Body *body = world.CreateBody(&bodyDef);
 
     b2PolygonShape shape;
-    shape.SetAsBox((SCREEN_WIDTH / 2.f) / SCALE, (2.f / 2) / SCALE);
+    shape.SetAsBox((SCREEN_WIDTH / 2.f) / BOX2D_SCALE, (2.f / 2) / BOX2D_SCALE);
 
     b2FixtureDef fixtureDef;
     fixtureDef.density = 0.f;
@@ -130,13 +128,13 @@ void createGround(b2World &world, float x, float y) {
 
 void createBox(b2World &world, float x, float y, float radians) {
     b2BodyDef bodyDef;
-    bodyDef.position = b2Vec2(x / SCALE, y / SCALE);
+    bodyDef.position = b2Vec2(x / BOX2D_SCALE, y / BOX2D_SCALE);
     bodyDef.angle = radians * b2_pi;
     bodyDef.type = b2_dynamicBody;
     b2Body *body = world.CreateBody(&bodyDef);
 
     b2PolygonShape shape;
-    shape.SetAsBox((BOX_SIZE / 2) / SCALE, (BOX_SIZE / 2) / SCALE);
+    shape.SetAsBox((BOX_SIZE / 2) / BOX2D_SCALE, (BOX_SIZE / 2) / BOX2D_SCALE);
 
     b2FixtureDef fixtureDef;
     fixtureDef.density = 1.f;
